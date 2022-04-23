@@ -65,6 +65,8 @@ def handle_coordinates(update: Update, context: CallbackContext) -> None:
 
 
 def handle_error(update: Update, context: CallbackContext) -> None:
+    if update is None:
+        return None
     errmsg = f"Error in chat {update.message.chat_id}: {{{context.error.__class__}}} {context.error}"
     print(errmsg)
     res_msg = "Я вас не зрозумів. Надішліть мені локацію чи координати!\nПомилка:"
