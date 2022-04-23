@@ -13,7 +13,7 @@ cur_dir = os.path.dirname(__file__)
 if cur_dir not in sys.path:
     sys.path.append(cur_dir)
 
-from secrets import API_KEY, ADMIN_ID
+from secrets import API_KEY
 from version import __version__
 from helpers import Point, MyLocation
 from constants import ACCURACY_METERS
