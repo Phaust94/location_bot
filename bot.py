@@ -7,7 +7,7 @@ import sys
 
 import telegram.error
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, ConversationHandler
+from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
 
 cur_dir = os.path.dirname(__file__)
 if cur_dir not in sys.path:
