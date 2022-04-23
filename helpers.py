@@ -36,7 +36,7 @@ class MyLocation(Location):
 
     @classmethod
     def from_tg_location(cls, tg_location: Location) -> MyLocation:
-        inst = cls(tg_location.latitude, tg_location.longitude, tg_location.horizontal_accuracy)
+        inst = cls(tg_location.longitude, tg_location.latitude, tg_location.horizontal_accuracy)
         return inst
 
 
