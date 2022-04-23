@@ -5,6 +5,7 @@ Bot main code
 import os
 import sys
 
+import telegram.error
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, ConversationHandler
 
@@ -26,11 +27,11 @@ def handle_location(update: Update, context: CallbackContext) -> None:
     return None
 
 
-def _handle_point(update: Update, pt: Point) -> None:
+def _handle_point(update: Update, pt: Point, add_neighbours: bool = False) -> None:
     hash_ = pt.hash
     msg = f"Ваш секретний код - {hash_}"
     update.message.reply_text(msg)
-    if update.message.chat_id == ADMIN_ID:
+    if add_neighbours:
         nb_hashes = set(x.hash for x in pt.neighbours(ACCURACY_METERS))
         nb_hashes = nb_hashes.union([pt.hash])
         nb_hashes_str = ", ".join(nb_hashes)
@@ -39,10 +40,8 @@ def _handle_point(update: Update, pt: Point) -> None:
     return None
 
 
-# noinspection PyUnusedLocal
-def handle_coordinates(update: Update, context: CallbackContext) -> None:
-    txt = update.message.text
-    pts = txt.split(",")
+def _handle_coordinate(msg: str, update: Update, add_neighbours: bool = False):
+    pts = msg.split(",")
     errmsg = "Це - не координати! Я очікую координати в форматі ##.######,##.######"
     if len(pts) != 2:
         raise ValueError(errmsg)
@@ -53,15 +52,26 @@ def handle_coordinates(update: Update, context: CallbackContext) -> None:
 
     loc = MyLocation(lat, lon)
     pt = Point.from_tg_location(loc)
-    _handle_point(update, pt)
-    return
+    _handle_point(update, pt, add_neighbours)
+
+    return None
+
+
+# noinspection PyUnusedLocal
+def handle_coordinates(update: Update, context: CallbackContext) -> None:
+    txt = update.message.text
+    _handle_coordinate(txt, update)
+    return None
 
 
 def handle_error(update: Update, context: CallbackContext) -> None:
     errmsg = f"Error in chat {update.message.chat_id}: {{{context.error.__class__}}} {context.error}"
     print(errmsg)
-    res_msg = "Я вас не зрозумів. Надішліть мені локацію!\nПомилка:"
-    update.message.reply_text(f"{res_msg} {{{context.error.__class__}}} {context.error}")
+    res_msg = "Я вас не зрозумів. Надішліть мені локацію чи координати!\nПомилка:"
+    msg = f"{res_msg} {{{context.error.__class__}}} {context.error}"
+    if context.error.__class__ is telegram.error.TimedOut:
+        msg += "\nСпробуйте повторити те ж саме ще раз!"
+    update.message.reply_text(msg)
     return None
 
 
@@ -74,12 +84,24 @@ def handle_info(update: Update, context: CallbackContext) -> None:
     return None
 
 
+# noinspection PyUnusedLocal
+def handle_neighbours(update: Update, context: CallbackContext) -> None:
+
+    msg = update.message.text
+    msg = msg.lstrip("/nb")
+    _handle_coordinate(msg, update, True)
+
+    return None
+
+
 def main():
-    updater = Updater(API_KEY, workers=1)
+    updater = Updater(API_KEY, workers=4)
 
     updater.dispatcher.add_handler(MessageHandler(Filters.location, handle_location))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_coordinates))
     updater.dispatcher.add_handler(CommandHandler("info", handle_info))
+    updater.dispatcher.add_handler(CommandHandler("nb", handle_neighbours))
+
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_coordinates))
 
     updater.dispatcher.add_error_handler(handle_error)
 
