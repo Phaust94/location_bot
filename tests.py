@@ -16,7 +16,7 @@ print(p3.hash)
 print(MyLocation.from_tg_location(loc1).dist(MyLocation.from_tg_location(loc2)))
 print(MyLocation.from_tg_location(loc1).dist(MyLocation.from_tg_location(loc3)))
 
-nb = p3.neighbours(15)
+nb = p3.neighbours(50)
 hh = set(x.hash for x in nb)
 print(hh)
 print(hh.union([p3.hash]))

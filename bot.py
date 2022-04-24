@@ -29,13 +29,15 @@ def handle_location(update: Update, context: CallbackContext) -> None:
 
 def _handle_point(update: Update, pt: Point, add_neighbours: bool = False) -> None:
     hash_ = pt.hash
-    msg = f"Ваш секретний код - {hash_}"
+    msg = f"Ваш секретний код - \n{hash_}"
     update.message.reply_text(msg)
     if add_neighbours:
-        nb_hashes = set(x.hash for x in pt.neighbours(ACCURACY_METERS))
-        nb_hashes = nb_hashes.union([pt.hash])
+        nb_hashes = list(sorted(set(
+            x.hash
+            for x in pt.neighbours(ACCURACY_METERS)
+        )))
         nb_hashes_str = ", ".join(nb_hashes)
-        msg = f"Сусіди: {nb_hashes_str}"
+        msg = f"Сусіди:\n{nb_hashes_str}"
         update.message.reply_text(msg)
     return None
 
@@ -50,7 +52,7 @@ def _handle_coordinate(msg: str, update: Update, add_neighbours: bool = False):
     except Exception:
         raise ValueError(errmsg)
 
-    loc = MyLocation(lat, lon)
+    loc = MyLocation(lon, lat)
     pt = Point.from_tg_location(loc)
     _handle_point(update, pt, add_neighbours)
 
